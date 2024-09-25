@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, FormEvent } from 'react';
+import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import {
   Container,
   Box,
@@ -7,14 +7,21 @@ import {
   Typography,
   Avatar,
   CssBaseline,
+  Snackbar,
 } from '@mui/material';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { app } from '../../service/firebase';
 
 const theme = createTheme();
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>((props, ref) => (
+  <MuiAlert elevation={6} ref={ref} variant='filled' {...props} />
+));
 
 interface FormState {
   email: string;
@@ -35,8 +42,20 @@ export default function LoginPage(): JSX.Element {
     email: '',
     password: '',
   });
-  
-  const navigate = useNavigate()
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('logout-success') === '1') {
+      setSnackbarOpen(true);
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 100);
+    }
+  }, [location, navigate]);
 
   const validateEmail = (email: string): boolean => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,15 +83,15 @@ export default function LoginPage(): JSX.Element {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    if (formState.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long';
+    if (formState.password.length === 0) {
+      newErrors.password = 'Password is required';
     }
 
     setFormErrors(newErrors);
 
     if (!newErrors.email && !newErrors.password) {
       try {
-        const auth = getAuth();
+        const auth = getAuth(app);
         const userCredential = await signInWithEmailAndPassword(
           auth,
           formState.email,
@@ -81,6 +100,7 @@ export default function LoginPage(): JSX.Element {
         const user = userCredential.user;
         const token = await user.getIdToken();
 
+        console.log({ user, token });
         Cookies.set('authToken', token, {
           expires: 7,
           secure: true,
@@ -88,8 +108,7 @@ export default function LoginPage(): JSX.Element {
         });
 
         console.log('User logged in successfully');
-        navigate('/')
-
+        navigate('/');
       } catch (error: any) {
         console.error('Login error:', error.message);
         setFormErrors({
@@ -98,6 +117,16 @@ export default function LoginPage(): JSX.Element {
         });
       }
     }
+  };
+
+  const handleSnackbarClose = (
+    _?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+    setSnackbarOpen(false);
   };
 
   return (
@@ -162,6 +191,20 @@ export default function LoginPage(): JSX.Element {
             </Button>
           </Box>
         </Box>
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={handleSnackbarClose}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity='success'
+            sx={{ width: '100%' }}
+          >
+            Logged out successfully
+          </Alert>
+        </Snackbar>
       </Container>
     </ThemeProvider>
   );

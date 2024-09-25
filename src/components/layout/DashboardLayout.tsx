@@ -13,14 +13,24 @@ import {
   Box,
   CssBaseline,
   ListItemButton,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import { SidebarItem, sidebarItems } from '../../data/sidebarItems';
+import { getAuth, signOut } from 'firebase/auth';
+import { app } from '../../service/firebase';
+import Cookies from 'js-cookie';
 
 const drawerWidth = 240;
 
@@ -68,14 +78,16 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   justifyContent: 'flex-end',
 }));
 
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [open, setOpen] = useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const auth = getAuth(app);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -83,6 +95,26 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
 
   const handleDrawerClose = () => {
     setOpen(false);
+  };
+
+  const handleLogoutClick = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      await signOut(auth);
+      Cookies.remove('authToken');
+      navigate('/login?logout-success=1');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    } finally {
+      setLogoutDialogOpen(false);
+    }
+  };
+
+  const handleLogoutCancel = () => {
+    setLogoutDialogOpen(false);
   };
 
   return (
@@ -99,9 +131,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant='h6' noWrap component='div'>
+          <Typography variant='h6' noWrap component='div' sx={{ flexGrow: 1 }}>
             Dashboard
           </Typography>
+          <Button
+            color='inherit'
+            onClick={handleLogoutClick}
+            startIcon={<LogoutIcon />}
+          >
+            Logout
+          </Button>
         </Toolbar>
       </AppBarStyled>
       <Drawer
@@ -141,6 +180,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
         <DrawerHeader />
         <Container maxWidth='lg'>{children}</Container>
       </Main>
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={handleLogoutCancel}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'
+      >
+        <DialogTitle id='alert-dialog-title'>{'Confirm Logout'}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id='alert-dialog-description'>
+            Are you sure you want to log out?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleLogoutCancel}>Cancel</Button>
+          <Button onClick={handleLogoutConfirm} autoFocus>
+            Logout
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -84,4 +84,4 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
   }
 };
 
-export { db, storage };
+export { app, db, storage };

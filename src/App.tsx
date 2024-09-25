@@ -22,6 +22,12 @@ const PrivateRoute: React.FC<{ element: React.ReactElement }> = ({
   return isAuthenticated() ? element : <Navigate to='/login' replace />;
 };
 
+const PublicRoute: React.FC<{ element: React.ReactElement }> = ({
+  element,
+}) => {
+  return isAuthenticated() ? <Navigate to='/' replace /> : element;
+};
+
 const DashboardRoute: React.FC<{ element: React.ReactElement }> = ({
   element,
 }) => {
@@ -32,7 +38,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/login' element={<LoginScreen />} />
+        <Route
+          path='/login'
+          element={<PublicRoute element={<LoginScreen />} />}
+        />
         <Route
           path='/'
           element={
