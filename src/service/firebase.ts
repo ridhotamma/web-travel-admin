@@ -8,6 +8,8 @@ import {
   where,
   DocumentData,
   WhereFilterOp,
+  doc,
+  getDoc,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
@@ -47,6 +49,25 @@ export const getDocuments = async <T>(collectionName: string): Promise<T[]> => {
     );
   } catch (error) {
     console.error('Error getting documents: ', error);
+    throw error;
+  }
+};
+
+export const getDocument = async <T>(
+  collectionName: string,
+  docId: string
+): Promise<T> => {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as T;
+    } else {
+      throw new Error('Document not found');
+    }
+  } catch (error) {
+    console.error('Error getting document: ', error);
     throw error;
   }
 };

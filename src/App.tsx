@@ -9,6 +9,7 @@ import ListRequest from './components/screens/ListRequest';
 import LoginScreen from './components/screens/LoginScreen';
 import DashboardLayout from './components/layout/DashboardLayout';
 import Cookies from 'js-cookie';
+import RequestDetail from './components/screens/RequestDetail';
 
 const isAuthenticated = (): boolean => {
   return (
@@ -47,6 +48,14 @@ function App() {
           element={
             <PrivateRoute
               element={<DashboardRoute element={<ListRequest />} />}
+            />
+          }
+        />
+        <Route
+          path='/jamaah/:id'
+          element={
+            <PrivateRoute
+              element={<DashboardRoute element={<RequestDetail />} />}
             />
           }
         />

@@ -21,6 +21,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 import { Visibility, Search } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 
 interface JamaahSubmission {
   id: string;
@@ -54,6 +55,11 @@ const ListRequest: React.FC = () => {
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const navigate = useNavigate();
+
+  const handleViewDetails = (id: string) => {
+    navigate(`/jamaah/${id}`);
+  };
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -182,7 +188,11 @@ const ListRequest: React.FC = () => {
                   {!isMobile && <TableCell>{renderDocumentChips()}</TableCell>}
                   <TableCell align='center'>
                     <Tooltip title='View Details'>
-                      <IconButton size='small' color='primary'>
+                      <IconButton
+                        size='small'
+                        color='primary'
+                        onClick={() => handleViewDetails(submission.id)}
+                      >
                         <Visibility />
                       </IconButton>
                     </Tooltip>

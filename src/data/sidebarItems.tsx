@@ -10,7 +10,7 @@ export interface SidebarItem {
 export const sidebarItems: SidebarItem[] = [
   {
     id: 'list-request',
-    label: 'Dashboard',
+    label: 'Jamaah Request',
     href: '/',
     icon: <FeedIcon />,
   },
