@@ -10,23 +10,100 @@ import {
   WhereFilterOp,
   doc,
   getDoc,
+  QueryDocumentSnapshot,
+  QueryConstraint,
+  orderBy,
+  limit,
+  startAfter,
+  Query,
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBx47SCHxsxnP0ZFlAvtmIvxCcCvFu--ds",
-  authDomain: "samira-travel.firebaseapp.com",
-  databaseURL: "https://samira-travel-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "samira-travel",
-  storageBucket: "samira-travel.appspot.com",
-  messagingSenderId: "891625530636",
-  appId: "1:891625530636:web:7f68c0f2954c1b34fd5529",
-  measurementId: "G-H0B23JQXNS"
+  apiKey: 'AIzaSyBx47SCHxsxnP0ZFlAvtmIvxCcCvFu--ds',
+  authDomain: 'samira-travel.firebaseapp.com',
+  databaseURL:
+    'https://samira-travel-default-rtdb.asia-southeast1.firebasedatabase.app',
+  projectId: 'samira-travel',
+  storageBucket: 'samira-travel.appspot.com',
+  messagingSenderId: '891625530636',
+  appId: '1:891625530636:web:7f68c0f2954c1b34fd5529',
+  measurementId: 'G-H0B23JQXNS',
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+export type QueryCondition = {
+  field: string;
+  operator: WhereFilterOp,
+  value: any;
+};
+
+export const getPaginatedDocuments = async <T>(
+  collectionName: string,
+  pageSize: number,
+  lastVisible: QueryDocumentSnapshot<DocumentData> | null = null,
+  conditions: QueryCondition[] = [],
+  orderByField: string = 'nama',
+  orderDirection: 'asc' | 'desc' = 'asc'
+): Promise<{
+  data: T[];
+  lastVisible: QueryDocumentSnapshot<DocumentData> | null;
+}> => {
+  try {
+    const queryConstraints: QueryConstraint[] = [
+      orderBy(orderByField, orderDirection),
+      limit(pageSize),
+    ];
+
+    if (lastVisible) {
+      queryConstraints.push(startAfter(lastVisible));
+    }
+
+    conditions.forEach((condition) => {
+      queryConstraints.push(
+        where(condition.field, condition.operator, condition.value)
+      );
+    });
+
+    const querySnapshot = await getDocs(
+      query(collection(db, collectionName), ...queryConstraints)
+    );
+
+    const documents = querySnapshot.docs.map(
+      (doc) => ({ id: doc.id, ...doc.data() } as T)
+    );
+
+    const newLastVisible =
+      querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+
+    return { data: documents, lastVisible: newLastVisible };
+  } catch (error) {
+    console.error('Error getting paginated documents: ', error);
+    throw error;
+  }
+};
+
+export const getTotalCount = async (
+  collectionName: string,
+  conditions: QueryCondition[] = []
+): Promise<number> => {
+  try {
+    let q: Query<DocumentData, DocumentData> = collection(db, collectionName);
+
+    conditions.forEach((condition) => {
+      q = query(q, where(condition.field, condition.operator, condition.value));
+    });
+
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+  } catch (error) {
+    console.error('Error getting total count: ', error);
+    throw error;
+  }
+};
 
 export const addDocument = async <T extends DocumentData>(
   collectionName: string,
@@ -60,7 +137,7 @@ export const getDocument = async <T>(
   try {
     const docRef = doc(db, collectionName, docId);
     const docSnap = await getDoc(docRef);
-    
+
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() } as T;
     } else {

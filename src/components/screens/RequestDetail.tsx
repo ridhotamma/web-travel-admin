@@ -9,7 +9,7 @@ import {
   CircularProgress,
   Box,
 } from '@mui/material';
-import { ArrowBack } from '@mui/icons-material';
+import { ArrowBack, Download } from '@mui/icons-material';
 import { getDocument } from '../../service/firebase';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
 
@@ -34,15 +34,19 @@ interface JamaahSubmission {
   ttl: string;
 }
 
+interface DocumentInfo {
+  key: string;
+  label: string;
+  url: string;
+}
+
 const RequestDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [jamaah, setJamaah] = useState<JamaahSubmission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [documentURLs, setDocumentURLs] = useState<{ [key: string]: string }>(
-    {}
-  );
+  const [documents, setDocuments] = useState<DocumentInfo[]>([]);
 
   useEffect(() => {
     const fetchJamaahDetail = async () => {
@@ -67,48 +71,75 @@ const RequestDetail: React.FC = () => {
 
   const fetchDocumentURLs = async (data: JamaahSubmission) => {
     const storage = getStorage();
-    const urls: { [key: string]: string } = {};
-    const documents = [
-      { key: 'ktp', url: data.ktp },
-      { key: 'foto', url: data.foto },
-      { key: 'fotoPassport', url: data.fotoPassport },
-      { key: 'bukuNikah', url: data.bukuNikah },
-      { key: 'kk', url: data.kk },
-      { key: 'kartuBpjs', url: data.kartuBpjs },
-      { key: 'suratVaksin', url: data.suratVaksin },
+    const documentList: DocumentInfo[] = [
+      { key: 'ktp', label: 'KTP', url: data.ktp },
+      { key: 'foto', label: 'Foto', url: data.foto },
+      { key: 'fotoPassport', label: 'Foto Passport', url: data.fotoPassport },
+      { key: 'bukuNikah', label: 'Buku Nikah', url: data.bukuNikah },
+      { key: 'kk', label: 'Kartu Keluarga', url: data.kk },
+      { key: 'kartuBpjs', label: 'Kartu BPJS', url: data.kartuBpjs },
+      { key: 'suratVaksin', label: 'Surat Vaksin', url: data.suratVaksin },
     ];
 
-    for (const doc of documents) {
-      try {
-        const fileRef = ref(storage, doc.url);
-        const downloadURL = await getDownloadURL(fileRef);
-        urls[doc.key] = downloadURL;
-      } catch (error) {
-        console.error(`Error fetching URL for ${doc.key}:`, error);
-      }
-    }
+    const updatedDocuments: DocumentInfo[] = await Promise.all(
+      documentList.map(async (doc) => {
+        try {
+          const fileRef = ref(storage, doc.url);
+          const downloadURL = await getDownloadURL(fileRef);
+          return { ...doc, url: downloadURL };
+        } catch (error) {
+          console.error(`Error fetching URL for ${doc.key}:`, error);
+          return doc;
+        }
+      })
+    );
 
-    setDocumentURLs(urls);
+    setDocuments(updatedDocuments);
   };
 
-  const renderDocumentPreview = (url: string, label: string) => {
+  const renderDocumentPreview = (doc: DocumentInfo) => {
     return (
       <Box
         sx={{
-          mt: 2,
           border: '1px solid #ccc',
           borderRadius: 1,
           overflow: 'hidden',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         <Typography variant='subtitle2' sx={{ p: 1, bgcolor: '#f5f5f5' }}>
-          {label}
+          {doc.label}
         </Typography>
-        <img
-          src={url}
-          alt={label}
-          style={{ width: '100%', maxHeight: '300px', objectFit: 'contain' }}
-        />
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            p: 2,
+          }}
+        >
+          <img
+            src={doc.url}
+            alt={doc.label}
+            style={{
+              maxWidth: '100%',
+              maxHeight: '200px',
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
+        <Button
+          variant='contained'
+          startIcon={<Download />}
+          onClick={() => window.open(doc.url, '_blank')}
+          fullWidth
+          sx={{ mt: 'auto' }}
+        >
+          Download
+        </Button>
       </Box>
     );
   };
@@ -137,7 +168,7 @@ const RequestDetail: React.FC = () => {
   }
 
   return (
-    <Container maxWidth='md'>
+    <Container maxWidth='lg'>
       <Button
         startIcon={<ArrowBack />}
         onClick={() => navigate(-1)}
@@ -177,9 +208,9 @@ const RequestDetail: React.FC = () => {
           Documents
         </Typography>
         <Grid container spacing={2}>
-          {Object.entries(documentURLs).map(([key, url], index) => (
-            <Grid item xs={12} key={index}>
-              {renderDocumentPreview(url, key)}
+          {documents.map((doc, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              {renderDocumentPreview(doc)}
             </Grid>
           ))}
         </Grid>
