@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/layout/dashboardlayout.tsx","./src/components/screens/listrequest.tsx","./src/components/screens/loginscreen.tsx","./src/components/screens/requestdetail.tsx","./src/data/sidebaritems.tsx","./src/interface/jamaahsubmission.ts","./src/service/firebase.ts"],"errors":true,"version":"5.6.2"}
