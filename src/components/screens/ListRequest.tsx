@@ -22,27 +22,7 @@ import {
 } from '@mui/material';
 import { Visibility, Search } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-
-interface JamaahSubmission {
-  id: string;
-  alamat: string;
-  bukuNikah: string;
-  email: string;
-  foto: string;
-  fotoPassport: string;
-  jenisKelamin: string;
-  kartuBpjs: string;
-  kk: string;
-  kota: string;
-  ktp: string;
-  nama: string;
-  noHp: string;
-  noKtpSim: string;
-  paketUmroh: string;
-  pekerjaan: string;
-  suratVaksin: string;
-  ttl: string;
-}
+import { JamaahSubmission } from '../../interface/JamaahSubmission';
 
 const ListRequest: React.FC = () => {
   const [submissions, setSubmissions] = useState<JamaahSubmission[]>([]);
@@ -61,19 +41,19 @@ const ListRequest: React.FC = () => {
     navigate(`/jamaah/${id}`);
   };
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const data = await getDocuments<JamaahSubmission>('jamaah_submissions');
-        setSubmissions(data);
-        setFilteredSubmissions(data);
-        setLoading(false);
-      } catch (err: any) {
-        setError(err.toString());
-        setLoading(false);
-      }
-    };
+  const fetchSubmissions = async () => {
+    try {
+      const data = await getDocuments<JamaahSubmission>('jamaah_submissions')
+      setSubmissions(data);
+      setFilteredSubmissions(data);
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.toString());
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchSubmissions();
   }, []);
 

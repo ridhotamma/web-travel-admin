@@ -12,27 +12,7 @@ import {
 import { ArrowBack, Download } from '@mui/icons-material';
 import { getDocument } from '../../service/firebase';
 import { getDownloadURL, getStorage, ref } from 'firebase/storage';
-
-interface JamaahSubmission {
-  id: string;
-  alamat: string;
-  bukuNikah: string;
-  email: string;
-  foto: string;
-  fotoPassport: string;
-  jenisKelamin: string;
-  kartuBpjs: string;
-  kk: string;
-  kota: string;
-  ktp: string;
-  nama: string;
-  noHp: string;
-  noKtpSim: string;
-  paketUmroh: string;
-  pekerjaan: string;
-  suratVaksin: string;
-  ttl: string;
-}
+import { JamaahSubmission } from '../../interface/JamaahSubmission';
 
 interface DocumentInfo {
   key: string;

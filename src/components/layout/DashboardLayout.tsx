@@ -169,7 +169,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
                 to={item.href}
                 selected={location.pathname === item.href}
               >
-                <ListItemIcon>{item.icon}</ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 40 }}>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.label} />
               </ListItemButton>
             </ListItem>

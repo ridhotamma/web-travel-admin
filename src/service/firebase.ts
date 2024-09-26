@@ -50,7 +50,7 @@ export const getPaginatedDocuments = async <T>(
   orderDirection: 'asc' | 'desc' = 'asc'
 ): Promise<{
   data: T[];
-  lastVisible: QueryDocumentSnapshot<DocumentData> | null;
+  newLastVisible: QueryDocumentSnapshot<DocumentData> | null;
 }> => {
   try {
     const queryConstraints: QueryConstraint[] = [
@@ -79,7 +79,7 @@ export const getPaginatedDocuments = async <T>(
     const newLastVisible =
       querySnapshot.docs[querySnapshot.docs.length - 1] || null;
 
-    return { data: documents, lastVisible: newLastVisible };
+    return { data: documents, newLastVisible };
   } catch (error) {
     console.error('Error getting paginated documents: ', error);
     throw error;
